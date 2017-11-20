@@ -163,6 +163,8 @@ int main(void)
     /* Print a diagnostic message to the console */
     DEBUG_PRINTF("Starting Example...\r\n");
 
+    config_print_public_key();
+
     for(;;)
     {
         /* Handle WIFI state machine */

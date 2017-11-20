@@ -45,7 +45,7 @@
 #define CONFIG_DEBUG
 
 /* Define for WIFI Manager Debug */
-#define CONFIG_WIFI_DEBUG
+//#define CONFIG_WIFI_DEBUG
 
 /* Define for Client Manager Debug */
 #define CONFIG_CLIENT_DEBUG
@@ -70,6 +70,7 @@ int config_get_client_password(char* buf, size_t buflen);
 int config_get_client_pub_topic(char* buf, size_t buflen);
 int config_get_client_sub_topic(char* buf, size_t buflen);
 int config_get_host_info(char* buf, size_t buflen, uint16_t * port);
+int config_print_public_key(void);
 
 #ifdef CONFIG_DEBUG
 #define DEBUG_PRINTF(f, ...)  printf(f, ##__VA_ARGS__)

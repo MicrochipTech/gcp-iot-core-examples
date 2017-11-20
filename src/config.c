@@ -241,3 +241,52 @@ int config_get_host_info(char* buf, size_t buflen, uint16_t * port)
         return -1;
     }
 }
+
+
+const uint8_t public_key_x509_header[] = { 0x30, 0x59, 0x30, 0x13, 0x06, 0x07, 0x2A, 0x86,
+                                           0x48, 0xCE, 0x3D, 0x02, 0x01, 0x06, 0x08, 0x2A,
+                                           0x86, 0x48, 0xCE, 0x3D, 0x03, 0x01, 0x07, 0x03, 
+                                           0x42, 0x00, 0x04 };
+int config_print_public_key(void)
+{
+    uint8_t buf[128];
+    uint8_t * tmp;
+    size_t buf_len = sizeof(buf);
+    int i;
+
+    ATCA_STATUS rv = atcab_init(&cfg_ateccx08a_i2c_default);
+    if(ATCA_SUCCESS != rv)
+    {
+        return rv;
+    }
+
+    /* Calculate where the raw data will fit into the buffer */
+    tmp = buf + sizeof(buf) - ATCA_PUB_KEY_SIZE - sizeof(public_key_x509_header);
+
+    /* Copy the header */
+    memcpy(tmp, public_key_x509_header, sizeof(public_key_x509_header));
+
+    /* Get public key without private key generation */
+    rv = atcab_get_pubkey(0, tmp + sizeof(public_key_x509_header));
+
+    atcab_release();
+
+    if (ATCA_SUCCESS != rv ) {
+        return rv;
+    }
+
+    /* Convert to base 64 */
+    rv = atcab_base64encode(tmp, ATCA_PUB_KEY_SIZE + sizeof(public_key_x509_header), buf, &buf_len);
+
+    if(ATCA_SUCCESS != rv)
+    {
+        return rv;
+    }
+
+    /* Add a null terminator */
+    buf[buf_len] = 0;
+
+    /* Print out the key */
+    DEBUG_PRINTF("-----BEGIN PUBLIC KEY-----\r\n%s\r\n-----END PUBLIC KEY-----\r\n", buf);
+
+}

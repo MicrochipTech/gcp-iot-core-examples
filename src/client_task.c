@@ -198,8 +198,8 @@ static void client_state_update(void* pCtx, uint32_t next, uint32_t wait)
 {
     struct _g_client_context* ctx = (struct _g_client_context*)pCtx;
 
-    CLIENT_PRINTF("%s(%u) -> %s(%u)\r\n", tiny_state_name(ctx, ctx->state.state),
-    ctx->state.state, tiny_state_name(ctx, next), next);
+    //CLIENT_PRINTF("%s(%u) -> %s(%u)\r\n", tiny_state_name(ctx, ctx->state.state),
+    //      ctx->state.state, tiny_state_name(ctx, next), next);
 
     /* Set the new state */
     tiny_state_update(ctx, next);
