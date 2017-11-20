@@ -495,7 +495,6 @@ uint8_t atca_kit_send_and_receive(uint8_t *tx_buffer, uint8_t *rx_buffer)
 	uint8_t status = ATCA_SUCCESS;
 	uint8_t cmd_index;
 	uint16_t rx_length;
-	uint16_t execution_time = 0;
 	uint8_t *cmd_buffer;
 	ATCADevice  _Device = NULL;
 	ATCACommand _CommandObj = NULL;
@@ -515,7 +514,10 @@ uint8_t atca_kit_send_and_receive(uint8_t *tx_buffer, uint8_t *rx_buffer)
 		_Device= atcab_get_device();
 		_CommandObj = atGetCommands(_gDevice);
 
-		execution_time = atGetExecTime(tx_buffer[1], _CommandObj);
+        if ((status = atGetExecTime(tx_buffer[1], _CommandObj)) != ATCA_SUCCESS)
+        {
+            break;
+        }
 
 		if ( (status = atcab_wakeup()) != ATCA_SUCCESS )
 			break;
@@ -528,7 +530,7 @@ uint8_t atca_kit_send_and_receive(uint8_t *tx_buffer, uint8_t *rx_buffer)
 			break;
 
 		// delay the appropriate amount of time for command to execute
-		atca_delay_ms(execution_time);
+		atca_delay_ms(_CommandObj->execution_time_msec);
 
 		// receive the response
 		if ((status = atreceive( _Iface, rx_buffer, &rx_length)) != ATCA_SUCCESS )
@@ -553,7 +555,6 @@ uint8_t atca_kit_send_command(uint8_t *tx_buffer)
 	uint8_t status = ATCA_SUCCESS;
 	uint8_t cmd_index;
 	uint16_t rx_length;
-	uint16_t execution_time = 0;
 	uint8_t *cmd_buffer;
 	ATCADevice  _Device = NULL;
 	ATCACommand _CommandObj = NULL;
@@ -573,7 +574,10 @@ uint8_t atca_kit_send_command(uint8_t *tx_buffer)
 		_Device= atcab_get_device();
 		_CommandObj = atGetCommands(_Device);
 		
-		execution_time = atGetExecTime(tx_buffer[1], _CommandObj);
+        if ((status = atGetExecTime(tx_buffer[1], _CommandObj)) != ATCA_SUCCESS)
+        {
+            break;
+        }
 
 		if ( (status = atcab_wakeup()) != ATCA_SUCCESS )
 			break;
@@ -586,7 +590,7 @@ uint8_t atca_kit_send_command(uint8_t *tx_buffer)
 			break;
 
 		// delay the appropriate amount of time for command to execute
-		atca_delay_ms(execution_time);
+		atca_delay_ms(_CommandObj->execution_time_msec);
 
 		atcab_idle();
 
