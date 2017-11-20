@@ -16,6 +16,7 @@ using the ATECC508A or ATECC608A and WINC1500 with a selection of energy efficen
 #### Microcontrollers or SOCs:
 * ATSAMD21  	(ARM Cortex-M0)
 * ATSAMW25		(ARM Cortex-M0)
+* Raspberry Pi
 
 ### Project Organization
 
