@@ -81,7 +81,7 @@ uint32_t time_utils_get_utc(void)
         rtc_get_date(RTC, &year, &month, &day, NULL);
         rtc_get_time(RTC, &hour, &minute, &second);
         
-        return util_convert_time(year, month, day, hour, minute, second);
+        return time_utils_convert(year, month, day, hour, minute, second);
 #endif
     }
     else

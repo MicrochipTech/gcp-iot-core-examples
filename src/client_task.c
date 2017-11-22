@@ -322,6 +322,7 @@ static int client_subscribe(void* pCtx)
 /* Connect to the host */
 static void client_state_connect(void* pCtx)
 {
+    int status;
     if(client_counter_finished(pCtx))
     {
         /* Update Hold-off */
@@ -334,16 +335,18 @@ static void client_state_connect(void* pCtx)
         }
 
         /* Connect the MQTT client */
-        if(client_connect(pCtx))
+        status = client_connect(pCtx);
+        if(status)
         {
-            CLIENT_PRINTF("MQTT Client Failed to Connect\r\n");
+            CLIENT_PRINTF("MQTT Client Failed to Connect (%d)\r\n", status);
             return;
         }
                         
         /* Connect the MQTT client */
-        if(client_subscribe(pCtx))
+        status = client_subscribe(pCtx);
+        if(status)
         {
-            CLIENT_PRINTF("MQTT Subscription Failed\r\n");
+            CLIENT_PRINTF("MQTT Subscription Failed (%d)\r\n", status);
             return;
         }
 

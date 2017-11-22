@@ -73,7 +73,7 @@
 
 //! USB Device string definitions (Optional)
 #define  USB_DEVICE_MANUFACTURE_NAME      "Microchip Technology Inc."
-#define  USB_DEVICE_PRODUCT_NAME          "GCP IoT Zero Touch Demo"
+#define  USB_DEVICE_PRODUCT_NAME          "GCP IoT Core Example"
 // #define  USB_DEVICE_SERIAL_NAME           "12...EF"
 
 /**

@@ -45,6 +45,7 @@
 #include "config.h"
 #include "basic/atca_basic.h"
 #include "atca_kit_client.h"
+#include "time_utils.h"
 
 /** \brief version of development kit firmware
  *         that contains AES132 and SHA204 library */
@@ -223,6 +224,44 @@ interface_id_t atca_kit_discover_devices()
 	return bus_type;
 }
 
+#pragma pack(push, 1)
+struct kit_app_datetime {
+    uint16_t year;
+    uint8_t month;
+    uint8_t day;
+    uint8_t hour;
+    uint8_t minute;
+    uint8_t second;
+};
+#pragma pack(pop)
+
+static uint8_t atca_kit_process_board_app_command(uint8_t * rxbuf, uint16_t rxlen, uint8_t * txbuf, uint16_t * txlen)
+{
+    ATCA_STATUS status = ATCA_PARSE_ERROR;
+
+    if(!rxbuf || !rxlen)
+    {
+        return ATCA_BAD_PARAM;
+    }
+
+    switch(rxbuf[0])
+    {
+        case 0:
+            /* Set Time */
+            if(sizeof(struct kit_app_datetime) < rxlen)
+            {
+                struct kit_app_datetime * datetime = (struct kit_app_datetime *)&rxbuf[1];
+                time_utils_set(datetime->year, datetime->month, datetime->day, datetime->hour, datetime->minute, datetime->minute);
+                status = ATCA_SUCCESS;
+            }
+            break;
+        default:
+            break;
+    }
+    return status;
+}
+
+
 /** \brief This function parses kit commands (ASCII) received from a
  * 			PC host and returns an ASCII response.
  * \param[in] commandLength number of bytes in command buffer
@@ -251,6 +290,15 @@ uint8_t atca_kit_parse_board_commands(uint16_t commandLength, uint8_t *command,
 	*responseIsAscii = 1;
 
 	switch(pToken[1]) {
+        case 'a':
+            /* Application commands */
+			status = atca_kit_extract_data_load((const char*)pToken, &dataLength, rxData);
+			if (status != KIT_STATUS_SUCCESS)
+				break;
+
+            status = atca_kit_process_board_app_command(rxData[0], dataLength, response, responseLength);
+
+            break;
 
 		case 'v':
 			// Gets abbreviated board name and, if found, first device type and interface type.
