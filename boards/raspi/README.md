@@ -8,20 +8,22 @@ guide](https://cloud.google.com/iot/docs/protocol_bridge_guide).
 
 # Setup
 
-1.  Follow the instructions in the [parent README](../README.md).
+1.  Build libcryptoauth. From the base directory run (for I2C if the device is on a Pi shield, otherwise choose HID or CDC for USB kits)
+
+    `make libcryptoauth TARGET_HAL=I2C`
 
 2.  Use virtualenv to create a local Python environment.
 
-    virtualenv env && source env/bin/activate
+    `virtualenv env && source env/bin/activate`
 
 3.  Install the dependencies
 
-    pip install -r requirements.txt
+    `pip install -r requirements.txt`
 
 4.  Download the CA root certificates from pki.google.com into the same
     directory as the example script:
 
-    wget https://pki.google.com/roots.pem
+    `wget https://pki.google.com/roots.pem`
 
 # Running the Sample
 
