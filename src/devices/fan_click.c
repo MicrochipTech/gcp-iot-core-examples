@@ -35,7 +35,7 @@
 uint8_t g_fan_click_ready = false;
 uint8_t g_fan_click_cfg1_cached;
 
-#if defined(_SAMD21_)
+#if SAM0
 
 #include "cryptoauthlib.h"
 #include "hal/hal_samd21_i2c_asf.h"
@@ -82,7 +82,7 @@ static void fan_write_reg(uint8_t reg, uint8_t txdata)
     i2c_master_write_packet_wait(&(i2c_hal_data[cfg_ateccx08a_i2c_default.atcai2c.bus]->i2c_master_instance), &packet);
 }
 
-#elif defined(_SAMG_)
+#elif SAM
 
 static uint8_t fan_read_reg(uint8_t reg)
 {
@@ -219,11 +219,14 @@ static uint16_t fan_click_rpm_to_count(uint32_t rpm)
 
 void fan_click_set_target_tach( uint16_t tach )
 {
+#if !SAMG
     ATCA_STATUS status = atcab_init(&cfg_ateccx08a_i2c_default);
+
     if(ATCA_SUCCESS != status)
     {
         return;
     }
+#endif
 
     if(g_fan_click_ready)
     {
@@ -245,18 +248,23 @@ void fan_click_set_target_tach( uint16_t tach )
         fan_click_init();
     }
 
+#if !SAMG
     atcab_release();
+#endif
 }
 
 uint16_t fan_click_get_tach( void )
 {
     uint16_t ret = UINT16_MAX;
 
+#if !SAMG
     ATCA_STATUS status = atcab_init(&cfg_ateccx08a_i2c_default);
+
     if(ATCA_SUCCESS != status)
     {
         return ret;
     }
+#endif
 
     if(g_fan_click_ready)
     {
@@ -278,6 +286,8 @@ uint16_t fan_click_get_tach( void )
         fan_click_init();
     }
 
+#if !SAMG
     atcab_release();
+#endif
     return ret;
 }

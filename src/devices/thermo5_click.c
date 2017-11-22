@@ -39,7 +39,7 @@
 #define EXT_DIODE2     0x2324
 #define EXT_DIODE3     0x2A2B
 
-#if defined(_SAMD21_)
+#if SAM0
 
 #include "cryptoauthlib.h"
 #include "hal/hal_samd21_i2c_asf.h"
@@ -65,7 +65,7 @@ static uint8_t th5_read_reg(uint8_t reg)
     return reg;
 }
 
-#elif defined(_SAMG_)
+#elif SAM
 static uint8_t th5_read_reg(uint8_t reg)
 {
     uint8_t rxdata;
@@ -95,11 +95,13 @@ uint32_t th5_read_sensor(uint8_t sensor)
     uint16_t temp_raw;
     uint32_t temp = UINT32_MAX;
 
+#if !SAMG
     ATCA_STATUS status = atcab_init(&cfg_ateccx08a_i2c_default);
     if(ATCA_SUCCESS != status)
     {
         return temp;
     }
+#endif
 
     if(sensor < 4)
     {
@@ -110,6 +112,9 @@ uint32_t th5_read_sensor(uint8_t sensor)
         temp *= 125;
     }
 
+#if !SAMG
     atcab_release();
+#endif
+
     return temp;
 }

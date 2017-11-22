@@ -1,0 +1,6 @@
+
+
+Existing D21/W25 with paho client
+
+	Program Memory Usage 	:	139804 bytes   53.3 % Full
+	Data Memory Usage 		:	19464 bytes   59.4 % Full

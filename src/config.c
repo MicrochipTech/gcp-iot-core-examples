@@ -56,9 +56,12 @@ void config_crypto(void)
 {
     cfg_ateccx08a_i2c_default.atcai2c.slave_address  = 0xB0;
 
-#ifdef __SAMD21G18A__
-    /* For the SAMW25 */
-    cfg_ateccx08a_i2c_default.atcai2c.bus            = 0;
+#if BOARD == SAMW25_XPLAINED_PRO
+    /* For the ATSAMW25-XPRO Development Board */
+    cfg_ateccx08a_i2c_default.atcai2c.bus = 0;
+#elif BOARD == SAMG55_XPLAINED_PRO
+    /* For the ATSAMG55-XPRO Development board */
+    cfg_ateccx08a_i2c_default.atcai2c.bus = 1;
 #endif
 }
 

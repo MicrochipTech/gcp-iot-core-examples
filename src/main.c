@@ -33,6 +33,10 @@
 #include "config.h"
 #include "time_utils.h"
 
+#if !SAM0
+#include "genclk.h"
+#endif
+
 /* Tasks */
 #include "wifi_task.h"
 #include "client_task.h"
@@ -68,6 +72,16 @@ static void configure_console(void)
 	stdio_serial_init(&cdc_uart_module, EDBG_CDC_MODULE, &usart_conf);
 	usart_enable(&cdc_uart_module);
 #elif SAM
+	const usart_serial_options_t uart_serial_options = {
+    	.baudrate =		CONF_UART_BAUDRATE,
+    	.charlength =	CONF_UART_CHAR_LENGTH,
+    	.paritytype =	CONF_UART_PARITY,
+    	.stopbits =		CONF_UART_STOP_BITS,
+	};
+
+	/* Configure UART console. */
+	sysclk_enable_peripheral_clock(CONSOLE_UART_ID);
+	stdio_serial_init(CONF_UART, &uart_serial_options);
 #endif
 }
 
@@ -83,12 +97,15 @@ static void configure_rtc(void)
 
     rtc_count_enable(&rtc_instance);
 #elif SAM
+	pmc_switch_sclk_to_32kxtal(PMC_OSC_XTAL);
+
+	while (!pmc_osc_is_ready_32kxtal());
+
     rtc_set_hour_mode(RTC, 0);
 #endif
 }
 
-/* Timer callback function */
-static void periodic_timer_cb(struct tc_module *const module)
+void update_timers(void)
 {
     wifi_timer_update();
     client_timer_update();
@@ -96,11 +113,28 @@ static void periodic_timer_cb(struct tc_module *const module)
     atca_kit_timer_update();
 }
 
+/* Timer callback function */
+#if SAM0
+static void periodic_timer_cb(struct tc_module *const module)
+{
+    update_timers();
+}
+#elif SAM
+void TC0_Handler(void)
+{
+	if ((tc_get_status(TC0, 0) & TC_SR_CPCS) == TC_SR_CPCS)
+    {
+        update_timers();
+	}
+}
+#endif
+
 /* Configure a periodic timer for driving various counters */
 static void configure_periodic_timer(void)
 {
-#if SAM0
     uint32_t counts;
+
+#if SAM0
     struct tc_config config_tc;
     tc_get_config_defaults(&config_tc);
 
@@ -125,9 +159,53 @@ static void configure_periodic_timer(void)
     /* Enable the timer */
     tc_enable(&tc3_inst);
 #elif SAM
+    /* Enable the peripheral */
+    pmc_enable_periph_clk(ID_TC0);
+    
+    /* Switch the Programmable Clock module PCK3 (TC Module) source clock to 
+        the Slow Clock, with no pre-scaler */
+    pmc_switch_pck_to_sclk(PMC_PCK_3, GENCLK_PCK_PRES_1);
+    
+    /* Enable Programmable Clock module PCK3 (TC Module) */
+    pmc_enable_pck(PMC_PCK_3);
 
+    /* Configure TC0 channel 0 to waveform mode (periodic count) */
+    tc_init(TC0, 0, TC_CMR_TCCLKS_TIMER_CLOCK5 // Waveform Clock Selection
+                 | TC_CMR_WAVE // Waveform mode is enabled
+                 | TC_CMR_ACPC_CLEAR // RC Compare Effect: clear
+                 | TC_CMR_CPCTRG ); // UP mode with automatic trigger on RC
+
+    /* Configure waveform frequency and duty cycle.  */
+    counts = TIMER_UPDATE_PERIOD * OSC_SLCK_32K_XTAL_HZ;
+    counts /= 1000;
+
+    /* Configure TC0 channel 0 reset counts */
+    tc_write_rc(TC0, 0, counts);
+
+    /* Enable the reset compare interrupt */
+    NVIC_EnableIRQ(TC0_IRQn);
+    tc_enable_interrupt(TC0, 0, TC_IER_CPCS);
+
+    /* Start the timer */
+    tc_start(TC0, 0);
 #endif
 }
+
+#if BOARD == SAMG55_XPLAINED_PRO
+static void configure_ext3(void)
+{
+    static twi_options_t ext3_twi_options;
+
+    flexcom_enable(FLEXCOM4);
+    flexcom_set_opmode(FLEXCOM4, FLEXCOM_TWI);
+
+    ext3_twi_options.master_clk = sysclk_get_cpu_hz();
+    ext3_twi_options.speed = 100000;
+    ext3_twi_options.smbus = 0;
+
+    twi_master_init(TWI4, &ext3_twi_options);
+}
+#endif
 
 /**
  * \brief Main application function.
@@ -138,24 +216,38 @@ static void configure_periodic_timer(void)
  */
 int main(void)
 {
-	/* Initialize the board. */
+    /* Initialize the board. */
+#if SAM0
 	system_init();
+#elif SAM
+    sysclk_init();
+	board_init();
+#endif
 
     /* Enable basic drivers */
     delay_init();
+
+#if SAM0
+    /* Enable Interrupts for Cortex-M0 */
     system_interrupt_enable_global();
+#endif
+
+#if BOARD == SAMG55_XPLAINED_PRO
+    /* Enable the I2C interface on the EXT1 header */
+    configure_ext3();
+#endif
+
+	/* Initialize the UART console. */
+	configure_console();
+
+    /* Initialize the RTC */
+    configure_rtc();
 
     /* Set the local configuration for the cryptographic device being used */
     config_crypto();
 
     /* Initialize a periodic timer */
     configure_periodic_timer();
-
-    /* Initialize the RTC */
-    configure_rtc();
-
-	/* Initialize the UART console. */
-	configure_console();
 
     /* Initialize the USB HID interface */
     usb_hid_init();
