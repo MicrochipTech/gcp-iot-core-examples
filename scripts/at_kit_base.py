@@ -1,5 +1,9 @@
+#!/usr/bin/env python
+
 import re
 import binascii
+import crcmod.predefined
+import struct
 
 #DEVICE_HID_VID = 0x04d8
 #DEVICE_HID_PID = 0x0f32
@@ -8,6 +12,13 @@ DEVICE_HID_PID = 0x2312
 KIT_VERSION = "2.0.0"
 
 KIT_APP_COMMAND_SET_TIME = 0
+
+
+def kit_crc(data):
+    """Return bytes object of the crc based on the input data bytes"""
+    crc16 = crcmod.predefined.Crc('crc-16')
+    crc16.update(bytes(data))
+    return struct.pack('<H', int('{:016b}'.format(crc16.crcValue)[::-1], 2))
 
 
 class KitError(Exception):
@@ -23,7 +34,7 @@ class KitDevice:
         self.report_size = 64
         self.next_app_cmd_id = 0
         self.app_responses = {}
-        self.kit_reply_regex = re.compile('^([0-9a-zA-Z]{2})\\(([^)]*)\\)')
+        self.kit_reply_regex = re.compile('([0-9a-zA-Z]{2})\\(([^)]*)\\)')
 
     def open(self, vendor_id=DEVICE_HID_VID, product_id=DEVICE_HID_PID):
         """Opens HID device for the Kit. Adjusts default VID/PID for the kit."""
@@ -58,7 +69,7 @@ class KitDevice:
         data = data[:data.index(10)+1] # Trim any data after the newline
         return ''.join(map(chr, data)) # Convert data from list of integers into string
 
-    def parse_kit_reply(self, data):
+    def kit_parse_reply(self, data):
         """Perform basic parsing of the kit protocol replies.
 
         - XX(YYZZ...)
@@ -68,3 +79,26 @@ class KitDevice:
         if match is None:
             raise ValueError('Unable to parse kit protocol reply: %s' % data)
         return {'status': int(match.group(1), 16), 'data': match.group(2)}
+
+    def kit_list(self, idx):
+        """Request the address of the device associated with the index"""
+        self.kit_write('b:d', struct.pack("<B", idx))
+        return int(self.kit_parse_reply(self.kit_read(0))['data'], 16)
+
+    def kit_select(self, dev):
+        """Select the device with the given address"""
+        self.kit_write('e:p:s', struct.pack("<B", dev))
+        return self.kit_read(0)
+
+    def kit_command(self, opcode, param1, param2, data=b'', timeout_ms=0):
+        l2s = len(data) + 7     # length(1) + opcode(1) + param1(1) + param2(2) + crc(2)
+        # Make Packet
+        d2s = struct.pack("<BBBH", l2s, opcode, param1, param2)
+        # Append CRC
+        d2s += kit_crc(d2s)
+        # Send the command
+        self.kit_write('e:t', d2s)
+        # Get the response
+        resp = self.kit_read(timeout_ms=timeout_ms)
+        # Parse the response
+        return self.kit_parse_reply(resp)
