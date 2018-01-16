@@ -35,6 +35,8 @@
 #include "config.h"
 
 void sensor_task(void);
+uint32_t sensor_get_temperature(void);
+uint16_t sensor_get_fan_speed(void);
 
 #ifdef CONFIG_USE_JSON_LIB
 #include "parson.h"

@@ -144,8 +144,35 @@ static void write_map_to_buffer(uint8_t *buffer, size_t buflen)
     }
 }
 
+uint32_t sensor_get_temperature(void)
+{
+#ifdef CONFIG_SENSOR_SIMULATOR
+	if (24000 > g_temp_buffer[0] || 30000 < g_temp_buffer[0])
+	{
+		g_temp_buffer[0] = 24000;
+	}
+	else
+	{
+		g_temp_buffer[0] += 1000;
+	}
+	return g_temp_buffer[0];
+#else
+	return th5_read_sensor(0);
+#endif
+}
+
+uint16_t sensor_get_fan_speed(void)
+{
+#ifdef CONFIG_SENSOR_SIMULATOR
+	return get_speed_from_map(g_temp_buffer[0]);
+#else
+	return fan_click_get_tach();
+#endif
+}
+
  void sensor_task(void)
 {
+#ifndef CONFIG_SENSOR_SIMULATOR
     uint16_t temp;
     uint16_t speed;
 
@@ -162,4 +189,5 @@ static void write_map_to_buffer(uint8_t *buffer, size_t buflen)
 
     /* Set new target */
     fan_click_set_target_tach(speed);
+#endif
 }

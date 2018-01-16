@@ -116,8 +116,8 @@ static void client_publish_message(MQTTClient* mqtt_client)
     MQTTMessage message;
     char json_message[256];
     uint32_t ts = time_utils_get_utc();
-    uint32_t temp = th5_read_sensor(0);
-    uint32_t speed = fan_click_get_tach();
+    uint32_t temp = sensor_get_temperature();
+    uint32_t speed = sensor_get_fan_speed();
     char topic[100];
 
     if(config_get_client_pub_topic(topic, sizeof(topic)))

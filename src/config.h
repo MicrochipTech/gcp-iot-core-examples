@@ -45,13 +45,16 @@
 #define CONFIG_DEBUG
 
 /* Define for WIFI Manager Debug */
-//#define CONFIG_WIFI_DEBUG
+#define CONFIG_WIFI_DEBUG
 
 /* Define for Client Manager Debug */
 #define CONFIG_CLIENT_DEBUG
 
 /* Define if the connection parameters are in code */
 #define CONFIG_USE_STATIC_CONFIG
+
+/* Define if simulating the data */
+#define CONFIG_SENSOR_SIMULATOR
 
   
 /** \brief Check if the configuration has been loaded */
