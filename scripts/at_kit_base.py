@@ -11,8 +11,6 @@ DEVICE_HID_VID = 0x03eb
 DEVICE_HID_PID = 0x2312
 KIT_VERSION = "2.0.0"
 
-KIT_APP_COMMAND_SET_TIME = 0
-
 
 def kit_crc(data):
     """Return bytes object of the crc based on the input data bytes"""
@@ -89,11 +87,17 @@ class KitDevice:
         """Select the device with the given address"""
         self.kit_write('e:p:s', struct.pack("<B", dev))
         return self.kit_read(0)
+        
+    def kit_info(self, param1):
+        self.kit_write('b:f', struct.pack("<B", param1))
+        return self.kit_read()
 
     def kit_command(self, opcode, param1, param2, data=b'', timeout_ms=0):
         l2s = len(data) + 7     # length(1) + opcode(1) + param1(1) + param2(2) + crc(2)
         # Make Packet
         d2s = struct.pack("<BBBH", l2s, opcode, param1, param2)
+        # Append the data
+        d2s += data
         # Append CRC
         d2s += kit_crc(d2s)
         # Send the command
@@ -102,3 +106,43 @@ class KitDevice:
         resp = self.kit_read(timeout_ms=timeout_ms)
         # Parse the response
         return self.kit_parse_reply(resp)
+    
+    @staticmethod
+    def kit_parse_resp(resp):
+        if 0 != resp['status']:
+            raise ValueError('Command returned error {}'.format(resp['status']))
+        else:
+            return bytes.fromhex(resp['data'])[1:-2]
+            
+    def kit_command_resp(self, opcode, param1, param2, data=b'', timeout_ms=0):
+        return self.kit_parse_resp(self.kit_command(opcode, param1, param2, data, timeout_ms))
+
+    @staticmethod
+    def _calc_addr(zone, slot, offset):
+        block = int(offset/32)
+        offset = int(offset/4) & 0x07
+        if 2 == zone:
+            addr = (slot << 3) | offset | (block << 8)
+        elif 0 == zone:
+            addr = (block << 3) | offset
+        else:
+            raise ValueError('Invalid Zone')
+
+        return addr
+
+    def read_bytes(self, zone, slot, offset, length, timeout_ms=0):
+        resp = bytearray()
+        for x in range(int(offset/4)*4, offset+length, 4):
+            resp += self.kit_command_resp(0x02, zone, self._calc_addr(zone, slot, x), timeout_ms=timeout_ms)
+        return bytes(resp[offset % 4:(offset % 4) + length])
+    
+    def write_bytes(self, zone, slot, offset, data, timeout_ms=0):
+        idx = 0
+        for x in range(int(offset/4)*4, offset+len(data), 4):
+            self.kit_command_resp(0x12, zone, self._calc_addr(zone, slot, x), data=data[idx:idx+4], timeout_ms=timeout_ms)
+            idx += 4
+
+            
+    
+    
+    

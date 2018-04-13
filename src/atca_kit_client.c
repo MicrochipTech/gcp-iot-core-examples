@@ -58,8 +58,8 @@ const char StringSha204[] = "SHA204 ";      //!< SHA204 string
 const char StringAes132[] = "AES132 ";      //!< AES132 string
 const char StringEcc508[] = "ECC108 ";      //!< ECC108 string
 
-const char StringKitShort[] = "CK590 ";     //!< short string of Microbase kit
-const char StringKit[] = "AT88CK590 ";   //!< long string of Microbase kit
+const char StringKitShort[] = "CK101 ";     //!< short string of Microbase kit
+const char StringKit[] = "AT88CK101STK ";   //!< long string of Microbase kit
 
 device_info_t device_info[DISCOVER_DEVICE_COUNT_MAX];
 uint8_t device_count = 0;
