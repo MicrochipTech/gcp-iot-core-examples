@@ -280,6 +280,7 @@ sint8 nm_drv_init(void * arg)
 {
 	sint8 ret = M2M_SUCCESS;
 	uint8 u8Mode;
+	uint32 chipid;
 	
 	if(NULL != arg) {
 		u8Mode = *((uint8 *)arg);
@@ -315,7 +316,16 @@ sint8 nm_drv_init(void * arg)
 		goto ERR2;
 	}
 #endif
-	M2M_INFO("Chip ID %lx\n", nmi_get_chipid());
+
+	/* Check to see if the device is attached */
+	chipid = nmi_get_chipid();
+	if (0x1503a0 != chipid)
+	{
+		ret =  M2M_ERR_TIME_OUT;
+		goto ERR2;
+	}
+
+	M2M_INFO("Chip ID %lx\n", chipid);
 #ifdef CONF_WINC_USE_SPI
 	/* Must do this after global reset to set SPI data packet size. */
 	nm_spi_init();

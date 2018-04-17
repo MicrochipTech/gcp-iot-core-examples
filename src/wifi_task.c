@@ -355,7 +355,7 @@ static void wifi_state_init(void * ctx)
     tstrWifiInitParam wifi_paramaters;
 
     /* Wait until the device has been "provisioned" or is configured to run */
-    if(!config_ready())
+    if(!config_ready() || !wifi_counter_finished())
     {
         return;
     }
@@ -370,7 +370,8 @@ static void wifi_state_init(void * ctx)
     /* Initialize the WINC1500 WIFI module */
     if(M2M_SUCCESS != m2m_wifi_init(&wifi_paramaters))
     {
-        WIFI_PRINTF("m2m_wifi_init failed\n");
+        WIFI_PRINTF("m2m_wifi_init failed\r\n");
+		wifi_counter_set(WIFI_COUNTER_CONNECT_WAIT);
         return;
     }
 
