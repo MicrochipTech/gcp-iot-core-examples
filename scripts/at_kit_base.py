@@ -11,6 +11,7 @@ DEVICE_HID_VID = 0x03eb
 DEVICE_HID_PID = 0x2312
 KIT_VERSION = "2.0.0"
 
+KIT_APP_COMMAND_SET_TIME = 0
 
 def kit_crc(data):
     """Return bytes object of the crc based on the input data bytes"""

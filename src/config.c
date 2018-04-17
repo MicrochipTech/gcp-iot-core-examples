@@ -33,6 +33,7 @@
 #include "config.h"
 #include "time_utils.h"
 #include "jwt/atca_jwt.h"
+#include "atca_kit_client.h"
 
 #ifdef CONFIG_USE_STATIC_CONFIG
 
@@ -54,7 +55,8 @@ const char config_gcp_thing_id[] = "<EXAMPLE_DEVICE_ID>";
 
 void config_crypto(void)
 {
-    cfg_ateccx08a_i2c_default.atcai2c.slave_address  = 0xB0;
+	/* Configure the default I2C address of the device */
+	cfg_ateccx08a_i2c_default.atcai2c.slave_address = 0xB0;
 
 #if BOARD == SAMW25_XPLAINED_PRO
     /* For the ATSAMW25-XPRO Development Board */
@@ -63,6 +65,9 @@ void config_crypto(void)
     /* For the ATSAMG55-XPRO Development board */
     cfg_ateccx08a_i2c_default.atcai2c.bus = 1;
 #endif
+
+	/* Detect devices */
+	(void)atca_kit_detect_I2c_devices();
 }
 
 bool config_ready(void)
