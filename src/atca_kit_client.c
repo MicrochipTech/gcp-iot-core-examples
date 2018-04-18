@@ -182,13 +182,6 @@ ATCA_STATUS atca_kit_detect_I2c_devices()
 	uint8_t i;
 
 	status = atcab_init( &cfg_ateccx08a_i2c_default );
-	for (i=0xB0; i<0xC8 && status; i+=2)
-	{
-		cfg_ateccx08a_i2c_default.atcai2c.slave_address = i;
-		status = atcab_init( &cfg_ateccx08a_i2c_default );
-	}
-
-	/* If the loop terminated before finding a device */
 	if (status != ATCA_SUCCESS)
 	{
 		return status;
@@ -196,6 +189,13 @@ ATCA_STATUS atca_kit_detect_I2c_devices()
 
 	/* Verify the device by retrieving the revision */
 	status = atcab_info(revision);
+	for (i=0xB0; i<0xC8 && status; i+=2)
+	{
+		cfg_ateccx08a_i2c_default.atcai2c.slave_address = i;
+		status = atcab_info(revision);
+	}
+
+	/* If the loop terminated before finding a device */
 	if (status != ATCA_SUCCESS)
 	{
 		return status;
@@ -213,9 +213,17 @@ ATCA_STATUS atca_kit_detect_I2c_devices()
 		case 0x60:
 			device_info[device_count].device_type = DEVICE_TYPE_ECC608A;
 			cfg_ateccx08a_i2c_default.devtype = ATECC608A;
+
+			/* Have to reinit to pick up clock settings if 608 is using lower power modes */
+			status = atcab_init( &cfg_ateccx08a_i2c_default );
+			if (status != ATCA_SUCCESS)
+			{
+				return status;
+			}
 			break;
 		default:
 			device_info[device_count].device_type = DEVICE_TYPE_ECC108A;
+			cfg_ateccx08a_i2c_default.devtype = ATECC108A;
 			break;
 	}
 	
