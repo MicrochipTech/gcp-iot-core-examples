@@ -15,6 +15,7 @@ using the ATECC508A or ATECC608A and WINC1500 with a selection of energy efficen
 
 #### Microcontrollers or SOCs:
 * ATSAMD21  	(ARM Cortex-M0)
+* ATSAMG55    (ARM Cortex-M4)
 * ATSAMW25		(ARM Cortex-M0)
 * Raspberry Pi
 
@@ -23,10 +24,13 @@ using the ATECC508A or ATECC608A and WINC1500 with a selection of energy efficen
 These examples were built with [Atmel Studio 7](http://www.atmel.com/microsite/atmel-studio/)
 
 ATSAMD21 Quick Start
-/boards/gcp_iot_core_samd21.atsln
+```/boards/gcp_iot_core_samd21.atsln```
+
+ATSAMG55 Quick Start
+```/boards/gcp_iot_core_samg55.atsln```
 
 ATSAMW25 Quick Start
-/boards/gcp_iot_core_samw25.atsln
+```/boards/gcp_iot_core_samw25.atsln```
 
 ### Getting Started
 
