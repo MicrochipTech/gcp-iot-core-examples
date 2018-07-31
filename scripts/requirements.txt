@@ -1,4 +1,4 @@
 crcmod
-cryptography
+cryptography ~> 2.3
 hidapi
 google-cloud-pubsub
